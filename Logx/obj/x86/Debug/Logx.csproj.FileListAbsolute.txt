@@ -1,0 +1,5 @@
+c:\users\six\documents\visual studio 2010\Projects\Logx\Logx\bin\Debug\Logx.exe
+c:\users\six\documents\visual studio 2010\Projects\Logx\Logx\bin\Debug\Logx.pdb
+c:\users\six\documents\visual studio 2010\Projects\Logx\Logx\obj\x86\Debug\ResolveAssemblyReference.cache
+c:\users\six\documents\visual studio 2010\Projects\Logx\Logx\obj\x86\Debug\Logx.exe
+c:\users\six\documents\visual studio 2010\Projects\Logx\Logx\obj\x86\Debug\Logx.pdb
