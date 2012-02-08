@@ -40,6 +40,8 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Gate.cs" />
+    <Compile Include="KeyboardState.cs" />
     <Compile Include="LogxMainForm.cs">
       <SubType>Form</SubType>
     </Compile>
