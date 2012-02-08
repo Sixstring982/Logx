@@ -133,13 +133,13 @@ namespace Logx
 
     class ButtonGate : Gate
     {
-        private bool On = true;
+        private bool On = false;
         public ButtonGate(int x, int y)
             : base(x, y)
         {
             inputs = new Gate[] { null, null };
             HasInput = false;
-            renderCode = 3;
+            renderCode = 4;
         }
 
         public void Toggle()

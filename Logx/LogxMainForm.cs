@@ -125,6 +125,7 @@ namespace Logx
 
             if (CtrlHeld)
             {
+                #region Loading
                 if ((int)e.KeyCode == 79)
                 {
                     OpenFileDialog odialog = new OpenFileDialog();
@@ -184,6 +185,9 @@ namespace Logx
                         EvaluateCircuit();
                     }
                 }
+                #endregion
+
+                #region Saving
                 if ((int)e.KeyCode == 83)
                 {
                     SaveFileDialog sdialog = new SaveFileDialog();
@@ -218,6 +222,10 @@ namespace Logx
                         fStream.Close();
                     }
                 }
+                #endregion
+
+                if (e.KeyCode == Keys.N)
+                    gateList.Clear();
             }
         }
 
@@ -270,11 +278,7 @@ namespace Logx
                         gateList[i].location.Y < currentMS.Y &&
                         gateList[i].location.Y + 32 > currentMS.Y)
                     {
-                        if (ShiftHeld)
-                        {
-                            gateList.RemoveAt(i);
-                        }
-                        else if (CtrlHeld)
+                        if (CtrlHeld)
                         {
                             if (gateList[i] is ButtonGate)
                             {
@@ -304,51 +308,70 @@ namespace Logx
             {
                 gateList[pickedGate].location.X = currentMS.X - pickedOffset.X;
                 gateList[pickedGate].location.Y = currentMS.Y - pickedOffset.Y;
+                if (ShiftHeld)
+                {
+                    gateList[pickedGate].location.X -= gateList[pickedGate].location.X % 16;
+                    gateList[pickedGate].location.Y -= gateList[pickedGate].location.Y % 16;
+                }
             }
 
             if (currentMS.Buttons[MouseButtons.Right] && !prevMS.Buttons[MouseButtons.Right])
             {
                 for (int i = 0; i < gateList.Count; i++)
                 {
-                    if (currentMS.X > gateList[i].location.X + 5 &&
-                        currentMS.X < gateList[i].location.X + 15) //Selected Input Block
+                    if (ShiftHeld)
                     {
-                        if (gateList[i].HasInput)
+                        if (gateList[i].location.X < currentMS.X &&
+                            gateList[i].location.X + 32 > currentMS.X &&
+                            gateList[i].location.Y < currentMS.Y &&
+                            gateList[i].location.Y + 32 > currentMS.Y)
                         {
-                            if (currentMS.Y > gateList[i].location.Y &&
-                                currentMS.Y < gateList[i].location.Y + 16) //Selected Top Input
+                            gateList.RemoveAt(i);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (currentMS.X > gateList[i].location.X + 5 &&
+                            currentMS.X < gateList[i].location.X + 15) //Selected Input Block
+                        {
+                            if (gateList[i].HasInput)
                             {
-                                if (wiringAnchor == null)
+                                if (currentMS.Y > gateList[i].location.Y &&
+                                    currentMS.Y < gateList[i].location.Y + 16) //Selected Top Input
                                 {
-                                    wiringAnchor = new GateTie();
-                                    wiringAnchor.inputNum = 0;
-                                    wiringAnchor.gateptr = gateList[i];
+                                    if (wiringAnchor == null)
+                                    {
+                                        wiringAnchor = new GateTie();
+                                        wiringAnchor.inputNum = 0;
+                                        wiringAnchor.gateptr = gateList[i];
+                                    }
                                 }
-                            }
-                            else if (currentMS.Y > gateList[i].location.Y + 16 &&
-                                currentMS.Y < gateList[i].location.Y + 32) //Selected Bottom Input
-                            {
-                                if (wiringAnchor == null)
+                                else if (currentMS.Y > gateList[i].location.Y + 16 &&
+                                    currentMS.Y < gateList[i].location.Y + 32) //Selected Bottom Input
                                 {
-                                    wiringAnchor = new GateTie();
-                                    if (gateList[i].inputs.Length < 2) wiringAnchor.inputNum = 0;
-                                    else wiringAnchor.inputNum = 1;
-                                    wiringAnchor.gateptr = gateList[i];
+                                    if (wiringAnchor == null)
+                                    {
+                                        wiringAnchor = new GateTie();
+                                        if (gateList[i].inputs.Length < 2) wiringAnchor.inputNum = 0;
+                                        else wiringAnchor.inputNum = 1;
+                                        wiringAnchor.gateptr = gateList[i];
+                                    }
                                 }
                             }
                         }
-                    }
-                    if (currentMS.X >= gateList[i].location.X + 18 &&
-                        currentMS.X <= gateList[i].location.X + 23 &&
-                        currentMS.Y >= gateList[i].location.Y &&
-                        currentMS.Y <= gateList[i].location.Y + 32) //Selected Output Block
-                    {
-                        if (wiringAnchor != null)
+                        if (currentMS.X >= gateList[i].location.X + 18 &&
+                            currentMS.X <= gateList[i].location.X + 23 &&
+                            currentMS.Y >= gateList[i].location.Y &&
+                            currentMS.Y <= gateList[i].location.Y + 32) //Selected Output Block
                         {
-                            if (wiringAnchor.gateptr != gateList[i])
+                            if (wiringAnchor != null)
                             {
-                                wiringAnchor.gateptr.inputs[wiringAnchor.inputNum] = gateList[i];
-                                wiringAnchor = null;
+                                if (wiringAnchor.gateptr != gateList[i])
+                                {
+                                    wiringAnchor.gateptr.inputs[wiringAnchor.inputNum] = gateList[i];
+                                    wiringAnchor = null;
+                                }
                             }
                         }
                     }
@@ -368,7 +391,11 @@ namespace Logx
                     gateList[i].Render(g, true);
                 else
                     gateList[i].Render(g);
-                for (int j = 0; j < gateList[i].inputs.Length; j++)
+            }
+
+            for (int i = 0; i < gateList.Count; i++)
+            {
+                for (int j = 0; j < gateList[i].inputs.Length; j++ )
                 {
                     if (gateList[i].inputs[j] != null)
                     {
