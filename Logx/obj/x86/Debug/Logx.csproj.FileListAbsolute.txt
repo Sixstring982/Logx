@@ -3,3 +3,8 @@ C:\Users\tsmall\git\Logx\Logx\Logx\bin\Debug\Logx.pdb
 C:\Users\tsmall\git\Logx\Logx\Logx\obj\x86\Debug\ResolveAssemblyReference.cache
 C:\Users\tsmall\git\Logx\Logx\Logx\obj\x86\Debug\Logx.exe
 C:\Users\tsmall\git\Logx\Logx\Logx\obj\x86\Debug\Logx.pdb
+C:\Users\Six\git\Logx\Logx\Logx\obj\x86\Debug\Logx.exe
+C:\Users\Six\git\Logx\Logx\Logx\obj\x86\Debug\Logx.pdb
+C:\Users\Six\git\Logx\Logx\Logx\bin\Debug\Logx.exe
+C:\Users\Six\git\Logx\Logx\Logx\bin\Debug\Logx.pdb
+C:\Users\Six\git\Logx\Logx\Logx\obj\x86\Debug\ResolveAssemblyReference.cache

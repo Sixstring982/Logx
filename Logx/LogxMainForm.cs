@@ -23,6 +23,7 @@ namespace Logx
         private Point pickedOffset = Point.Empty;
         private GateTie wiringAnchor = null;
         private bool ShiftHeld = false, CtrlHeld = false;
+        private bool DrawLogic = true;
 
         private Pen YellowPen = new Pen(new SolidBrush(Color.Yellow));
         private Pen BlackPen = new Pen(new SolidBrush(Color.Black));
@@ -116,6 +117,10 @@ namespace Logx
             if (e.KeyData == (Keys.LButton | Keys.ShiftKey | Keys.Control))
             {
                 CtrlHeld = true;
+            }
+            if (e.KeyCode == Keys.H)
+            {
+                DrawLogic = !DrawLogic;
             }
 
             if (CtrlHeld)
@@ -367,21 +372,33 @@ namespace Logx
                 {
                     if (gateList[i].inputs[j] != null)
                     {
+                        Point[] pts = new Point[4];
+                        pts[0] = new Point(gateList[i].location.X + 5, gateList[i].location.Y + 16);
+                        pts[1] = new Point(((gateList[i].inputs[j].location.X + 22) + (gateList[i].location.X + 5)) / 2, gateList[i].location.Y + 16);
+                        pts[2] = new Point(((gateList[i].inputs[j].location.X + 22) + (gateList[i].location.X + 5)) / 2, gateList[i].inputs[j].location.Y + 16);
+                        pts[3] = new Point(gateList[i].inputs[j].location.X + 22, gateList[i].inputs[j].location.Y + 16);
                         if (gateList[i].inputs.Length > 1)
-                            g.DrawLine(BlackPen, new Point(gateList[i].location.X + 5, gateList[i].location.Y + 10 + (10 * j)),
-                                new Point(gateList[i].inputs[j].location.X + 22, gateList[i].inputs[j].location.Y + 16));
-                        else
-                            g.DrawLine(BlackPen, new Point(gateList[i].location.X + 5, gateList[i].location.Y + 16),
-                                new Point(gateList[i].inputs[j].location.X + 22, gateList[i].inputs[j].location.Y + 16));
+                        {
+                            int partLength = (8 / (gateList[i].inputs.Length + 1)) + 8;
+                            pts[0].Y = (gateList[i].location.Y + partLength) + (partLength * j);
+                            pts[1].Y = (gateList[i].location.Y + partLength) + (partLength * j);
+                        }
+                        for (int k = 0; k < 3; k++)
+                        {
+                            if (gateList[i].inputs[j].Output())
+                                g.DrawLine(YellowPen, pts[k], pts[k + 1]);
+                            else
+                                g.DrawLine(BlackPen, pts[k], pts[k + 1]);
+                        }
                     }
                 }
             }
 
             if (wiringAnchor != null)
             {
-                if(wiringAnchor.gateptr.inputs.Length > 1)
-                g.DrawLine(YellowPen, new Point(wiringAnchor.gateptr.location.X + 5, wiringAnchor.gateptr.location.Y + 10 + (10 * wiringAnchor.inputNum)),
-                    new Point(currentMS.X, currentMS.Y));
+                if (wiringAnchor.gateptr.inputs.Length > 1)
+                    g.DrawLine(YellowPen, new Point(wiringAnchor.gateptr.location.X + 5, wiringAnchor.gateptr.location.Y + 10 + (10 * wiringAnchor.inputNum)),
+                        new Point(currentMS.X, currentMS.Y));
                 else
                     g.DrawLine(YellowPen, new Point(wiringAnchor.gateptr.location.X + 5, wiringAnchor.gateptr.location.Y + 16),
                         new Point(currentMS.X, currentMS.Y));
