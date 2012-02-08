@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -96,6 +97,9 @@ namespace Logx
                     case 5:
                         gateList.Add(new XorGate(screenWidth / 2, screenHeight / 2));
                         break;
+                    case 6:
+                        gateList.Add(new BulbGate(screenWidth / 2, screenHeight / 2));
+                        break;
                 }
             }
             if (e.KeyCode == Keys.Space)
@@ -109,6 +113,100 @@ namespace Logx
             if (e.KeyData == (Keys.LButton | Keys.ShiftKey | Keys.Control))
             {
                 CtrlHeld = true;
+            }
+
+            if (CtrlHeld)
+            {
+                if ((int)e.KeyCode == 79)
+                {
+                    OpenFileDialog odialog = new OpenFileDialog();
+                    odialog.Filter = "Logx Maps (*.lmp)|*.lmp";
+                    if (odialog.ShowDialog() == DialogResult.OK)
+                    {
+                        FileStream fStream = new FileStream(odialog.FileName, FileMode.OpenOrCreate);
+                        BinaryReader reader = new BinaryReader(fStream);
+                        int gateCount = reader.ReadInt32();
+                        gateList.Clear();
+                        for (int i = 0; i < gateCount; i++)
+                        {
+                            int lx = reader.ReadInt32();
+                            int ly = reader.ReadInt32();
+                            int rcode = reader.ReadInt32();
+                            Gate gate = null;
+                            switch (rcode)
+                            {
+                                case 0:
+                                    gate = new AndGate(lx, ly);
+                                    break;
+                                case 1:
+                                    gate = new OrGate(lx, ly);
+                                    break;
+                                case 2:
+                                    gate = new OnGate(lx, ly);
+                                    break;
+                                case 3:
+                                case 4:
+                                    gate = new ButtonGate(lx, ly);
+                                    break;
+                                case 5:
+                                    gate = new XorGate(lx, ly);
+                                    break;
+                                case 6:
+                                    gate = new OffGate(lx, ly);
+                                    break;
+                                case 7:
+                                case 8:
+                                    gate = new BulbGate(lx, ly);
+                                    break;
+                            }
+                            gateList.Add(gate);
+                        }
+                        while (fStream.Position < fStream.Length)
+                        {
+                            int fromGate = reader.ReadInt32();
+                            int inputNum = reader.ReadInt32();
+                            int toGate = reader.ReadInt32();
+
+                            gateList[fromGate].inputs[inputNum] = gateList[toGate];
+                        }
+                        fStream.Close();
+                        EvaluateCircuit();
+                    }
+                }
+                if ((int)e.KeyCode == 83)
+                {
+                    SaveFileDialog sdialog = new SaveFileDialog();
+                    sdialog.Filter = "Logx Maps (*.lmp)|*.lmp";
+                    if (sdialog.ShowDialog() == DialogResult.OK)
+                    {
+                        FileStream fStream = new FileStream(sdialog.FileName, FileMode.OpenOrCreate);
+                        BinaryWriter writer = new BinaryWriter(fStream);
+                        writer.Write(gateList.Count);
+                        for (int i = 0; i < gateList.Count; i++)
+                        {
+                            writer.Write(gateList[i].location.X);
+                            writer.Write(gateList[i].location.Y);
+                            writer.Write(gateList[i].renderCode);
+                        }
+                        for (int i = 0; i < gateList.Count; i++)
+                        {
+                            if (gateList[i].HasInput)
+                            {
+                                for (int j = 0; j < gateList[i].inputs.Length; j++)
+                                {
+                                    if (gateList[i].inputs[j] != null)
+                                    {
+                                        writer.Write(i);
+                                        writer.Write(j);
+                                        writer.Write(gateList.IndexOf(gateList[i].inputs[j]));
+                                    }
+                                }
+                            }
+                        }
+
+                        fStream.Close();
+                    }
+                }
             }
         }
 
@@ -222,7 +320,8 @@ namespace Logx
                                 if (wiringAnchor == null)
                                 {
                                     wiringAnchor = new GateTie();
-                                    wiringAnchor.inputNum = 1;
+                                    if (gateList[i].inputs.Length < 2) wiringAnchor.inputNum = 0;
+                                    else wiringAnchor.inputNum = 1;
                                     wiringAnchor.gateptr = gateList[i];
                                 }
                             }
@@ -309,6 +408,7 @@ namespace Logx
             e.Graphics.DrawImage(field, new Rectangle(new Point(0), field.Size), new Rectangle(new Point(0), field.Size), GraphicsUnit.Pixel);
         }
 
+        [STAThread]
         public static void Main(string[] args)
         {
             LogxMainForm x = new LogxMainForm();

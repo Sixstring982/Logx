@@ -11,7 +11,7 @@ namespace Logx
         public Point location;
         public Gate[] inputs;
         public abstract bool Output();
-        protected int renderCode = 0;
+        public int renderCode = 0;
         public bool HasInput = true;
         private bool EvaluatedOutput = false;
 
@@ -31,8 +31,6 @@ namespace Logx
         public void Render(Graphics g, bool active = false)
         {
             g.DrawImage(images[renderCode], location.X, location.Y);
-            if (EvaluatedOutput)
-                g.FillRectangle(new SolidBrush(Color.Green), new Rectangle(location.X, location.Y, 10, 10));
             if (active) g.DrawEllipse(new Pen(new SolidBrush(Color.Red)), new Rectangle(location.X + 13, location.Y + 13, 6, 6));
         }
 
@@ -154,6 +152,27 @@ namespace Logx
         public override bool Output()
         {
             return On;
+        }
+    }
+
+    class BulbGate : Gate
+    {
+        public BulbGate(int x, int y)
+            : base(x, y)
+        {
+            inputs = new Gate[] { null };
+            renderCode = 7;
+        }
+
+        public override bool Output()
+        {
+            if (inputs[0] != null)
+            {
+                if (inputs[0].Output()) renderCode = 8;
+                else renderCode = 7;
+                return inputs[0].Output();
+            }
+            return false;
         }
     }
 }
