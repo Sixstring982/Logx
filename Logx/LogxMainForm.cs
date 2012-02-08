@@ -100,6 +100,9 @@ namespace Logx
                     case 6:
                         gateList.Add(new BulbGate(screenWidth / 2, screenHeight / 2));
                         break;
+                    case 7:
+                        gateList.Add(new NotGate(screenWidth / 2, screenHeight / 2));
+                        break;
                 }
             }
             if (e.KeyCode == Keys.Space)
@@ -157,6 +160,9 @@ namespace Logx
                                 case 7:
                                 case 8:
                                     gate = new BulbGate(lx, ly);
+                                    break;
+                                case 9:
+                                    gate = new NotGate(lx, ly);
                                     break;
                             }
                             gateList.Add(gate);
@@ -361,16 +367,24 @@ namespace Logx
                 {
                     if (gateList[i].inputs[j] != null)
                     {
-                        g.DrawLine(BlackPen, new Point(gateList[i].location.X + 5, gateList[i].location.Y + 10 + (10*j)),
-                            new Point(gateList[i].inputs[j].location.X + 22, gateList[i].inputs[j].location.Y + 16));
+                        if (gateList[i].inputs.Length > 1)
+                            g.DrawLine(BlackPen, new Point(gateList[i].location.X + 5, gateList[i].location.Y + 10 + (10 * j)),
+                                new Point(gateList[i].inputs[j].location.X + 22, gateList[i].inputs[j].location.Y + 16));
+                        else
+                            g.DrawLine(BlackPen, new Point(gateList[i].location.X + 5, gateList[i].location.Y + 16),
+                                new Point(gateList[i].inputs[j].location.X + 22, gateList[i].inputs[j].location.Y + 16));
                     }
                 }
             }
 
             if (wiringAnchor != null)
             {
+                if(wiringAnchor.gateptr.inputs.Length > 1)
                 g.DrawLine(YellowPen, new Point(wiringAnchor.gateptr.location.X + 5, wiringAnchor.gateptr.location.Y + 10 + (10 * wiringAnchor.inputNum)),
                     new Point(currentMS.X, currentMS.Y));
+                else
+                    g.DrawLine(YellowPen, new Point(wiringAnchor.gateptr.location.X + 5, wiringAnchor.gateptr.location.Y + 16),
+                        new Point(currentMS.X, currentMS.Y));
             }
 
             g.DrawString("( " + currentMS.X + ", " + currentMS.Y + ")", debugFont, new SolidBrush(Color.Black), new PointF(0.0f, 490.0f));

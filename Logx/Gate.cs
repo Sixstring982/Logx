@@ -175,4 +175,20 @@ namespace Logx
             return false;
         }
     }
+
+    class NotGate : Gate
+    {
+        public NotGate(int x, int y)
+            : base(x, y)
+        {
+            inputs = new Gate[] { null };
+            renderCode = 9;
+        }
+
+        public override bool Output()
+        {
+            if (inputs[0] != null) return !inputs[0].Output();
+            else return false;
+        }
+    }
 }
