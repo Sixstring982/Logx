@@ -191,4 +191,20 @@ namespace Logx
             else return false;
         }
     }
+
+    class LinkGate : Gate
+    {
+        public LinkGate(int x, int y)
+            : base(x, y)
+        {
+            inputs = new Gate[] { null };
+            renderCode = 10;
+        }
+
+        public override bool Output()
+        {
+            if (inputs[0] != null) return inputs[0].Output();
+            else return false;
+        }
+    }
 }

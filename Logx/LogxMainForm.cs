@@ -78,33 +78,41 @@ namespace Logx
         {
             if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
             {
+                Gate gate;
+                int ptx = screenWidth / 2;
+                int pty = screenHeight / 2;
                 switch (e.KeyCode - Keys.D0)
                 {
+                    default:
                     case 0:
-                        gateList.Add(new AndGate(screenWidth / 2, screenHeight / 2));
+                        gate = new AndGate(ptx, pty);
                         break;
                     case 1:
-                        gateList.Add(new OrGate(screenWidth / 2, screenHeight / 2));
+                        gate = new OrGate(ptx, pty);
                         break;
                     case 2:
-                        gateList.Add(new OnGate(screenWidth / 2, screenHeight / 2));
+                        gate = new OnGate(ptx, pty);
                         break;
                     case 3:
-                        gateList.Add(new OffGate(screenWidth / 2, screenHeight / 2));
+                        gate = new OffGate(ptx, pty);
                         break;
                     case 4:
-                        gateList.Add(new ButtonGate(screenWidth / 2, screenHeight / 2));
+                        gate = new ButtonGate(ptx, pty);
                         break;
                     case 5:
-                        gateList.Add(new XorGate(screenWidth / 2, screenHeight / 2));
+                        gate = new XorGate(ptx, pty);
                         break;
                     case 6:
-                        gateList.Add(new BulbGate(screenWidth / 2, screenHeight / 2));
+                        gate = new BulbGate(ptx, pty);
                         break;
                     case 7:
-                        gateList.Add(new NotGate(screenWidth / 2, screenHeight / 2));
+                        gate = new NotGate(ptx, pty);
+                        break;
+                    case 8:
+                        gate = new LinkGate(ptx, pty);
                         break;
                 }
+                gateList.Add(gate);
             }
             if (e.KeyCode == Keys.Space)
             {
@@ -138,9 +146,9 @@ namespace Logx
                         gateList.Clear();
                         for (int i = 0; i < gateCount; i++)
                         {
-                            int lx = reader.ReadInt32();
-                            int ly = reader.ReadInt32();
-                            int rcode = reader.ReadInt32();
+                            int lx = reader.ReadInt16();
+                            int ly = reader.ReadInt16();
+                            int rcode = reader.ReadInt16();
                             Gate gate = null;
                             switch (rcode)
                             {
@@ -170,14 +178,17 @@ namespace Logx
                                 case 9:
                                     gate = new NotGate(lx, ly);
                                     break;
+                                case 10:
+                                    gate = new LinkGate(lx, ly);
+                                    break;
                             }
                             gateList.Add(gate);
                         }
                         while (fStream.Position < fStream.Length)
                         {
-                            int fromGate = reader.ReadInt32();
-                            int inputNum = reader.ReadInt32();
-                            int toGate = reader.ReadInt32();
+                            int fromGate = (reader.ReadInt16());
+                            int inputNum = (reader.ReadInt16());
+                            int toGate = (reader.ReadInt16());
 
                             gateList[fromGate].inputs[inputNum] = gateList[toGate];
                         }
@@ -199,9 +210,9 @@ namespace Logx
                         writer.Write(gateList.Count);
                         for (int i = 0; i < gateList.Count; i++)
                         {
-                            writer.Write(gateList[i].location.X);
-                            writer.Write(gateList[i].location.Y);
-                            writer.Write(gateList[i].renderCode);
+                            writer.Write((short)gateList[i].location.X);
+                            writer.Write((short)gateList[i].location.Y);
+                            writer.Write((short)gateList[i].renderCode);
                         }
                         for (int i = 0; i < gateList.Count; i++)
                         {
@@ -211,9 +222,9 @@ namespace Logx
                                 {
                                     if (gateList[i].inputs[j] != null)
                                     {
-                                        writer.Write(i);
-                                        writer.Write(j);
-                                        writer.Write(gateList.IndexOf(gateList[i].inputs[j]));
+                                        writer.Write((short)i);
+                                        writer.Write((short)j);
+                                        writer.Write((short)gateList.IndexOf(gateList[i].inputs[j]));
                                     }
                                 }
                             }
@@ -227,6 +238,11 @@ namespace Logx
                 if (e.KeyCode == Keys.N)
                     gateList.Clear();
             }
+        }
+
+        private short Swap(short input)
+        {
+            return (short)(((input & 0xf) << 4) + (input >> 4));
         }
 
         private void EvaluateCircuit()
@@ -406,9 +422,9 @@ namespace Logx
                         {
                             Point[] pts = new Point[4];
                             pts[0] = new Point(gateList[i].location.X + 5, gateList[i].location.Y + 16);
-                            pts[1] = new Point(((gateList[i].inputs[j].location.X + 22) + (gateList[i].location.X + 5)) / 2, gateList[i].location.Y + 16);
-                            pts[2] = new Point(((gateList[i].inputs[j].location.X + 22) + (gateList[i].location.X + 5)) / 2, gateList[i].inputs[j].location.Y + 16);
-                            pts[3] = new Point(gateList[i].inputs[j].location.X + 22, gateList[i].inputs[j].location.Y + 16);
+                            pts[1] = new Point(((gateList[i].inputs[j].location.X + 22) + (gateList[i].location.X + 5)) / 2, pts[0].Y);
+                            pts[2] = new Point(pts[1].X, gateList[i].inputs[j].location.Y + 16);
+                            pts[3] = new Point(gateList[i].inputs[j].location.X + 22, pts[2].Y);
                             if (gateList[i].inputs.Length > 1)
                             {
                                 int partLength = (8 / (gateList[i].inputs.Length + 1)) + 8;
