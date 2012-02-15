@@ -14,6 +14,7 @@ namespace Logx
         public int renderCode = 0;
         public bool HasInput = true;
         private bool EvaluatedOutput = false;
+        public bool alive = true;
 
         public static Bitmap[] images;
 

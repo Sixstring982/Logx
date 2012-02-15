@@ -146,9 +146,9 @@ namespace Logx
                         gateList.Clear();
                         for (int i = 0; i < gateCount; i++)
                         {
-                            int lx = reader.ReadInt16();
-                            int ly = reader.ReadInt16();
-                            int rcode = reader.ReadInt16();
+                            int lx = reader.ReadInt32();
+                            int ly = reader.ReadInt32();
+                            int rcode = reader.ReadInt32();
                             Gate gate = null;
                             switch (rcode)
                             {
@@ -186,9 +186,9 @@ namespace Logx
                         }
                         while (fStream.Position < fStream.Length)
                         {
-                            int fromGate = (reader.ReadInt16());
-                            int inputNum = (reader.ReadInt16());
-                            int toGate = (reader.ReadInt16());
+                            int fromGate = (reader.ReadInt32());
+                            int inputNum = (reader.ReadInt32());
+                            int toGate = (reader.ReadInt32());
 
                             gateList[fromGate].inputs[inputNum] = gateList[toGate];
                         }
@@ -210,9 +210,9 @@ namespace Logx
                         writer.Write(gateList.Count);
                         for (int i = 0; i < gateList.Count; i++)
                         {
-                            writer.Write((short)gateList[i].location.X);
-                            writer.Write((short)gateList[i].location.Y);
-                            writer.Write((short)gateList[i].renderCode);
+                            writer.Write(gateList[i].location.X);
+                            writer.Write(gateList[i].location.Y);
+                            writer.Write(gateList[i].renderCode);
                         }
                         for (int i = 0; i < gateList.Count; i++)
                         {
@@ -222,9 +222,9 @@ namespace Logx
                                 {
                                     if (gateList[i].inputs[j] != null)
                                     {
-                                        writer.Write((short)i);
-                                        writer.Write((short)j);
-                                        writer.Write((short)gateList.IndexOf(gateList[i].inputs[j]));
+                                        writer.Write(i);
+                                        writer.Write(j);
+                                        writer.Write(gateList.IndexOf(gateList[i].inputs[j]));
                                     }
                                 }
                             }
@@ -278,6 +278,19 @@ namespace Logx
                 FrameRender();
                 Application.DoEvents();
                 if (this.IsDisposed) running = false;
+            }
+        }
+
+        private void CleanupInputs()
+        {
+            for(int i = 0; i < gateList.Count; i++)
+            {
+                for (int j = 0; j < gateList[i].inputs.Length; j++)
+                {
+                    if (gateList[i].inputs[j] != null)
+                        if (!gateList[i].inputs[j].alive)
+                            gateList[i].inputs[j] = null;
+                }
             }
         }
 
@@ -342,7 +355,9 @@ namespace Logx
                             gateList[i].location.Y < currentMS.Y &&
                             gateList[i].location.Y + 32 > currentMS.Y)
                         {
+                            gateList[i].alive = false;
                             gateList.RemoveAt(i);
+                            CleanupInputs();
                             break;
                         }
                     }
