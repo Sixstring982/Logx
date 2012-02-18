@@ -14,6 +14,8 @@ namespace Logx
         public int renderCode = 0;
         public bool HasInput = true;
         private bool EvaluatedOutput = false;
+        public bool RisingEdge = false;
+        private bool LastOutput = false;
         public bool alive = true;
 
         public static Bitmap[] images;
@@ -21,6 +23,11 @@ namespace Logx
         public void Evaluate()
         {
             EvaluatedOutput = Output();
+            if (EvaluatedOutput != LastOutput && EvaluatedOutput)
+                RisingEdge = true;
+            else
+                RisingEdge = false;
+            LastOutput = EvaluatedOutput;
         }
 
         public Gate(int x, int y)
@@ -105,7 +112,7 @@ namespace Logx
     {
         public OnGate(int x, int y) : base(x, y)
         {
-            inputs = new Gate[] { null, null };
+            inputs = new Gate[] { null };
             HasInput = false;
             renderCode = 2;
         }
@@ -113,6 +120,23 @@ namespace Logx
         public override bool Output()
         {
             return true;
+        }
+    }
+
+    class EdgeGate : Gate
+    {
+        public EdgeGate(int x, int y)
+            : base(x, y)
+        {
+            inputs = new Gate[] { null };
+            renderCode = 12;
+        }
+
+        public override bool Output()
+        {
+            if(inputs[0] != null)
+                return inputs[0].RisingEdge;
+            return false;
         }
     }
 
@@ -129,6 +153,37 @@ namespace Logx
         public override bool Output()
         {
             return false;
+        }
+    }
+
+    class ClockGate : Gate
+    {
+        private DateTime lastChange;
+        private int clockSpeed = 100;
+        private bool on = false;
+        public ClockGate(int x, int y, int clockSpeed = 100)
+            : base(x, y)
+        {
+            inputs = new Gate[] { null, null };
+            renderCode = 11;
+            lastChange = DateTime.Now;
+            this.clockSpeed = clockSpeed;
+        }
+
+        public override bool Output()
+        {
+            if (inputs[0] != null)
+                if (inputs[0].Output())
+                    lastChange = DateTime.Now;
+            if ((DateTime.Now - lastChange).TotalMilliseconds > clockSpeed)
+            {
+                lastChange = DateTime.Now;
+                on = !on;
+            }
+            if (inputs[1] != null)
+                if (inputs[1].Output())
+                    on = false;
+            return on;
         }
     }
 

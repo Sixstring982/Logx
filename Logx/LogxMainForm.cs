@@ -22,7 +22,9 @@ namespace Logx
         private int pickedGate = -1;
         private Point pickedOffset = Point.Empty;
         private GateTie wiringAnchor = null;
-        private bool ShiftHeld = false, CtrlHeld = false;
+        private bool ShiftHeld = false, CtrlHeld = false, SpaceHeld = false;
+        private bool specifyingInteger = false;
+        private int inputInt = 100, intBuffer = 0;
         private bool DrawLogic = true;
 
         private Pen YellowPen = new Pen(new SolidBrush(Color.Yellow));
@@ -72,51 +74,85 @@ namespace Logx
             {
                 CtrlHeld = false;
             }
+            if (e.KeyData == Keys.Space)
+            {
+                SpaceHeld = false;
+            }
         }
 
         void LogxMainForm_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
+            if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
+                e.KeyCode == Keys.OemMinus)
             {
-                Gate gate;
-                int ptx = screenWidth / 2;
-                int pty = screenHeight / 2;
-                switch (e.KeyCode - Keys.D0)
+                if (specifyingInteger)
                 {
-                    default:
-                    case 0:
-                        gate = new AndGate(ptx, pty);
-                        break;
-                    case 1:
-                        gate = new OrGate(ptx, pty);
-                        break;
-                    case 2:
-                        gate = new OnGate(ptx, pty);
-                        break;
-                    case 3:
-                        gate = new OffGate(ptx, pty);
-                        break;
-                    case 4:
-                        gate = new ButtonGate(ptx, pty);
-                        break;
-                    case 5:
-                        gate = new XorGate(ptx, pty);
-                        break;
-                    case 6:
-                        gate = new BulbGate(ptx, pty);
-                        break;
-                    case 7:
-                        gate = new NotGate(ptx, pty);
-                        break;
-                    case 8:
-                        gate = new LinkGate(ptx, pty);
-                        break;
+                    intBuffer *= 10;
+                    intBuffer += (e.KeyCode - Keys.D0);
                 }
-                gateList.Add(gate);
+                else
+                {
+                    Gate gate;
+                    int ptx = screenWidth / 2;
+                    int pty = screenHeight / 2;
+                    switch (e.KeyCode - Keys.D0)
+                    {
+                        default:
+                        case 0:
+                            gate = new AndGate(ptx, pty);
+                            break;
+                        case 1:
+                            gate = new OrGate(ptx, pty);
+                            break;
+                        case 2:
+                            gate = new OnGate(ptx, pty);
+                            break;
+                        case 3:
+                            gate = new OffGate(ptx, pty);
+                            break;
+                        case 4:
+                            gate = new ButtonGate(ptx, pty);
+                            break;
+                        case 5:
+                            gate = new XorGate(ptx, pty);
+                            break;
+                        case 6:
+                            gate = new BulbGate(ptx, pty);
+                            break;
+                        case 7:
+                            gate = new NotGate(ptx, pty);
+                            break;
+                        case 8:
+                            gate = new LinkGate(ptx, pty);
+                            break;
+                        case 9:
+                            gate = new ClockGate(ptx, pty, inputInt);
+                            break;
+                        case (Keys.OemMinus - Keys.D0):
+                            gate = new EdgeGate(ptx, pty);
+                            break;
+                    }
+                    gateList.Add(gate);
+                }
             }
             if (e.KeyCode == Keys.Space)
             {
-                EvaluateCircuit();
+                SpaceHeld = true;
+            }
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (specifyingInteger)
+                {
+                    specifyingInteger = false;
+                    inputInt = intBuffer;
+                }
+            }
+            if (e.KeyCode == Keys.Back)
+            {
+                if (specifyingInteger)
+                {
+                    intBuffer /= 10;
+                }
             }
             if (e.KeyData == (Keys.ShiftKey | Keys.Shift))
             {
@@ -129,6 +165,11 @@ namespace Logx
             if (e.KeyCode == Keys.H)
             {
                 DrawLogic = !DrawLogic;
+            }
+            if (e.KeyCode == Keys.I)
+            {
+                specifyingInteger = true;
+                intBuffer = 0;
             }
 
             if (CtrlHeld)
@@ -180,6 +221,12 @@ namespace Logx
                                     break;
                                 case 10:
                                     gate = new LinkGate(lx, ly);
+                                    break;
+                                case 11:
+                                    gate = new ClockGate(lx, ly);
+                                    break;
+                                case 12:
+                                    gate = new EdgeGate(lx, ly);
                                     break;
                             }
                             gateList.Add(gate);
@@ -409,6 +456,11 @@ namespace Logx
                 }
             }
 
+            if (SpaceHeld)
+            {
+                EvaluateCircuit();
+            }
+
             prevMS = MouseState.GetMouseState();
         }
 
@@ -468,7 +520,10 @@ namespace Logx
                 }
             }
 
-            g.DrawString("( " + currentMS.X + ", " + currentMS.Y + ")", debugFont, new SolidBrush(Color.Black), new PointF(0.0f, 490.0f));
+            if(specifyingInteger)
+                g.DrawString("Int: " + intBuffer, debugFont, new SolidBrush(Color.Black), new PointF(0.0f, 490.0f));
+            else
+                g.DrawString("( " + currentMS.X + ", " + currentMS.Y + ")", debugFont, new SolidBrush(Color.Black), new PointF(0.0f, 490.0f));
             this.Invalidate();
         }
 
